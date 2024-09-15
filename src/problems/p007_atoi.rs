@@ -2,40 +2,55 @@ use crate::solution::Solution;
 
 // Body starts here
 
+enum Sign {
+    Neg,
+    Pos,
+}
+
+fn with_sign(sign: Sign, i: i64) -> i64 {
+    match sign {
+        Sign::Neg => -(i as i64),
+        Sign::Pos => i as i64,
+    }
+}
+
 impl Solution {
     pub fn my_atoi(s: String) -> i32 {
         let mut iter = s.chars().skip_while(|v| v.is_whitespace()).peekable();
         let (sign, bound) = match iter.peek() {
             Some('+') => {
                 iter.next();
-                (1 as i32, i32::MAX / 10)
+                (1, i32::MAX as i64)
             }
             Some('-') => {
                 iter.next();
-                (-1 as i32, (i32::MIN / 10).abs())
+                (-1, (i32::MIN as i64).abs())
             }
-            _ => (1, i32::MAX),
+            _ => (1, i32::MAX as i64),
         };
-        let parsed = iter
+        let mut digits = iter
             .skip_while(|v| *v == '0')
             .map_while(|c| c.to_digit(10))
-            .take(11) // i32::MAX is 2147483647, so we only need first 11 digits
+            .fuse();
+        let parsed = digits
+            .by_ref()
+            .take(10) // i32::MAX is 2147483647, so we only need first 11 digits
             .try_fold(0, |acc, i| {
-                let i = i as i32;
-                if acc > bound - i {
+                let i = i as i64;
+                if acc * 10 + i > bound {
                     None
                 } else {
                     Some(acc * 10 + i)
                 }
             });
 
-        if let Some(d) = parsed {
+        (if let Some(_) = digits.next() {
+            sign * bound
+        } else if let Some(d) = parsed {
             sign * d
-        } else if sign == 1 {
-            return i32::MAX;
         } else {
-            return i32::MIN;
-        }
+            sign * bound
+        }) as i32
     }
 }
 
@@ -51,5 +66,7 @@ mod tests {
         assert_eq!(Solution::my_atoi("0-1".to_string()), 0);
         assert_eq!(Solution::my_atoi("words and 987".to_string()), 0);
         assert_eq!(Solution::my_atoi("-91283472332".to_string()), i32::MIN);
+        assert_eq!(Solution::my_atoi("21474836460".to_string()), i32::MAX);
+        assert_eq!(Solution::my_atoi("-2147483647".to_string()), -2147483647);
     }
 }
