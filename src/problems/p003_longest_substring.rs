@@ -1,6 +1,7 @@
-use std::cmp::max;
+use crate::solution::Solution;
 
-struct Solution {}
+// Body starts here
+use std::cmp::max;
 
 impl Solution {
     pub fn length_of_longest_substring(s: String) -> i32 {
@@ -34,8 +35,4 @@ mod tests {
             );
         }
     }
-}
-
-fn main() {
-    println!("Hello, world!");
 }

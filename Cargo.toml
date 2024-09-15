@@ -1,2 +1,6 @@
-[workspace]
-members = [ "atoi","p01-two-sum", "p02-add-two-numbers", "p03-longest-substring-no-repeat", "p04-median-two-sorted", "p07-reverse-integer"]
+[package]
+name = "leetcode-rs"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]

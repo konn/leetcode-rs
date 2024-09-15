@@ -1,4 +1,5 @@
-use std::ops::Add;
+use crate::solution::Solution;
+// Body starts here
 
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct ListNode {
@@ -27,16 +28,6 @@ fn unfold_right<A>(step: impl Fn(A) -> Option<(i32, A)>, a: A) -> Option<Box<Lis
             Some(answer)
         }
     }
-}
-
-fn fold_left<A>(step: fn(A, i32) -> A, init: A, list: Option<Box<ListNode>>) -> A {
-    let mut accum = init;
-    let mut cursor = list;
-    while let Some(node) = cursor {
-        accum = step(accum, node.val);
-        cursor = node.next;
-    }
-    accum
 }
 
 // Can we implement this without recursion? (is Endo bad?)
@@ -68,23 +59,13 @@ fn to_reverse_digits(i: i32) -> Option<Box<ListNode>> {
     }
 }
 
-pub fn add_two_numbers(
-    l1: Option<Box<ListNode>>,
-    l2: Option<Box<ListNode>>,
-) -> Option<Box<ListNode>> {
-    to_reverse_digits(from_reverse_digits(l1) + from_reverse_digits(l2))
-}
-
-fn main() {
-    println!(
-        "{} + {} = {}",
-        12,
-        23,
-        from_reverse_digits(add_two_numbers(
-            to_reverse_digits(12),
-            to_reverse_digits(23)
-        ))
-    );
+impl Solution {
+    pub fn add_two_numbers(
+        l1: Option<Box<ListNode>>,
+        l2: Option<Box<ListNode>>,
+    ) -> Option<Box<ListNode>> {
+        to_reverse_digits(from_reverse_digits(l1) + from_reverse_digits(l2))
+    }
 }
 
 #[cfg(test)]
@@ -122,7 +103,7 @@ mod tests {
     #[test]
     fn test_add_two_numbers() {
         assert_eq!(
-            from_reverse_digits(add_two_numbers(
+            from_reverse_digits(Solution::add_two_numbers(
                 to_reverse_digits(12),
                 to_reverse_digits(23)
             )),
@@ -132,14 +113,17 @@ mod tests {
         assert_eq!(from_reverse_digits(to_reverse_digits(342)), 342);
         assert_eq!(from_reverse_digits(to_reverse_digits(465)), 465);
         assert_eq!(
-            from_reverse_digits(add_two_numbers(
+            from_reverse_digits(Solution::add_two_numbers(
                 to_reverse_digits(342),
                 to_reverse_digits(465)
             )),
             807
         );
         assert_eq!(
-            from_reverse_digits(add_two_numbers(to_reverse_digits(0), to_reverse_digits(0))),
+            from_reverse_digits(Solution::add_two_numbers(
+                to_reverse_digits(0),
+                to_reverse_digits(0)
+            )),
             0
         );
     }

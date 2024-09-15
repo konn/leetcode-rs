@@ -1,6 +1,7 @@
-use std::cmp::min;
+use crate::solution::Solution;
 
-pub struct Solution {}
+// Body starts here
+use std::cmp::min;
 
 impl Solution {
     pub fn find_median_sorted_arrays(nums1: Vec<i32>, nums2: Vec<i32>) -> f64 {
@@ -54,8 +55,4 @@ mod tests {
             2.5
         );
     }
-}
-
-fn main() {
-    println!("Hello, world!");
 }
