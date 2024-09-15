@@ -1,7 +1,6 @@
 use crate::solution::Solution;
 
 // Body starts here
-use std::cmp::min;
 
 impl Solution {
     pub fn find_median_sorted_arrays(nums1: Vec<i32>, nums2: Vec<i32>) -> f64 {
@@ -9,37 +8,85 @@ impl Solution {
         let half = total / 2;
         let is_even = total % 2 == 0;
         let stop = if is_even { half - 1 } else { half };
-        let mut total = 0;
+        let mut count = 0;
+        let mut pair: Option<i32> = None;
         let mut nums1 = &nums1[..];
         let mut nums2 = &nums2[..];
 
-        while let Some(l) = nums1.first() {
-            if let Some(r) = nums2.first() {
-                if total == stop {
-                    if is_even {
-                        return (*l + *r) as f64 / 2.0;
+        while !nums1.is_empty() || !nums2.is_empty() {
+            let l = nums1.first();
+            let r = nums2.first();
+            if let Some(x) = pair {
+                if let Some(l) = l {
+                    if let Some(r) = r {
+                        if l < r {
+                            return (x + l) as f64 / 2.;
+                        } else {
+                            return (x + r) as f64 / 2.;
+                        }
                     } else {
-                        return min(*l, *r) as f64;
+                        return (x + l) as f64 / 2.;
                     }
                 } else {
-                    total += 1;
-                    if l < r {
-                        nums1 = &nums1[1..];
+                    if let Some(r) = r {
+                        return (x + r) as f64 / 2.;
                     } else {
+                        // At least one of nums{1,2} non-empty.
+                        unreachable!()
+                    }
+                }
+            } else if count == stop {
+                if is_even {
+                    if let Some(&l) = l {
+                        if let Some(&r) = r {
+                            if l < r {
+                                pair = Some(l);
+                                nums1 = &nums1[1..];
+                            } else {
+                                pair = Some(r);
+                                nums2 = &nums2[1..];
+                            }
+                        } else {
+                            pair = Some(l);
+                            nums1 = &nums1[1..];
+                        }
+                    } else {
+                        pair = Some(*r.expect("r must be non-empty!"));
                         nums2 = &nums2[1..];
+                    }
+                } else {
+                    if let Some(&l) = l {
+                        if let Some(&r) = r {
+                            if l < r {
+                                return l as f64;
+                            } else {
+                                return r as f64;
+                            }
+                        } else {
+                            return l as f64;
+                        }
+                    } else {
+                        return *r.expect("r must be non-empty!") as f64;
                     }
                 }
             } else {
-                break;
+                count += 1;
+                if let Some(l) = l {
+                    if let Some(r) = r {
+                        if l < r {
+                            nums1 = &nums1[1..];
+                        } else {
+                            nums2 = &nums2[1..];
+                        }
+                    } else {
+                        nums1 = &nums1[1..];
+                    }
+                } else {
+                    nums2 = &nums2[1..];
+                }
             }
         }
-        let rest = if nums1.is_empty() { nums2 } else { nums1 };
-        let half = half - total;
-        if is_even {
-            (rest[half - 1] + rest[half]) as f64 / 2.0
-        } else {
-            rest[half] as f64
-        }
+        unreachable!()
     }
 }
 
