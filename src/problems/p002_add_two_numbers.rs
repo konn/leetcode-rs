@@ -13,7 +13,7 @@ impl ListNode {
     }
 }
 
-fn unfold_right<A>(step: impl Fn(A) -> Option<(i32, A)>, a: A) -> Option<Box<ListNode>> {
+pub fn unfold_right<A>(step: impl Fn(A) -> Option<(i32, A)>, a: A) -> Option<Box<ListNode>> {
     match step(a) {
         None => None,
         Some((val, a)) => {
@@ -31,18 +31,18 @@ fn unfold_right<A>(step: impl Fn(A) -> Option<(i32, A)>, a: A) -> Option<Box<Lis
 }
 
 // Can we implement this without recursion? (is Endo bad?)
-fn fold_right<A>(step: fn(i32, A) -> A, init: A, list: Option<Box<ListNode>>) -> A {
+pub fn fold_right<A>(step: fn(i32, A) -> A, init: A, list: Option<Box<ListNode>>) -> A {
     match list {
         None => init,
         Some(node) => step(node.val, fold_right(step, init, node.next)),
     }
 }
 
-fn from_reverse_digits(rev_digs: Option<Box<ListNode>>) -> i64 {
+pub fn from_reverse_digits(rev_digs: Option<Box<ListNode>>) -> i64 {
     fold_right(|i, accum| accum * 10 + (i as i64), 0, rev_digs)
 }
 
-fn to_reverse_digits(i: i64) -> Option<Box<ListNode>> {
+pub fn to_reverse_digits(i: i64) -> Option<Box<ListNode>> {
     if i == 0 {
         Some(Box::new(ListNode::new(0)))
     } else {

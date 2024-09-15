@@ -5,15 +5,14 @@ use std::cmp::max;
 
 impl Solution {
     pub fn length_of_longest_substring(s: String) -> i32 {
-        let mut len = 1;
+        let mut len = 0;
         let mut last_pos_map: std::collections::HashMap<char, usize> =
             std::collections::HashMap::new();
         let mut start = 0;
         for (end, c) in s.chars().enumerate() {
             if let Some(last) = last_pos_map.insert(c, end) {
-                start = last + 1;
-                if start >= s.len() {
-                    break;
+                if last >= start {
+                    start = last + 1;
                 }
             }
             len = max(len, end - start + 1);
