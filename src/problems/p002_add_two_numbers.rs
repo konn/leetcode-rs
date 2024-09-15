@@ -59,12 +59,56 @@ fn to_reverse_digits(i: i64) -> Option<Box<ListNode>> {
     }
 }
 
+fn align_with<'a, F>(mut f: F, l1: Box<ListNode>, l2: Box<ListNode>) -> Box<ListNode>
+where
+    F: FnMut(Option<i32>, Option<i32>) -> i32,
+{
+    let v = f(Some(l1.val), Some(l2.val));
+    let mut answer = Box::new(ListNode::new(v));
+    let mut tail = &mut answer.next;
+    let mut l1 = l1.next;
+    let mut l2 = l2.next;
+    while l1.is_some() || l2.is_some() {
+        let (l, l_next) = l1.map(|v| (v.val, v.next)).unzip();
+        l1 = l_next.flatten();
+        let (r, r_next) = l2.map(|v| (v.val, v.next)).unzip();
+        l2 = r_next.flatten();
+        let v = f(l, r);
+        let new_node = Box::new(ListNode::new(v));
+        tail = &mut tail.insert(new_node).next;
+    }
+    answer
+}
+
+fn push(list: &mut Box<ListNode>, val: i32) {
+    let mut tail = &mut list.next;
+    while tail.is_some() {
+        tail = &mut tail.as_mut().unwrap().next;
+    }
+    *tail = Some(Box::new(ListNode::new(val)));
+}
+
 impl Solution {
     pub fn add_two_numbers(
         l1: Option<Box<ListNode>>,
         l2: Option<Box<ListNode>>,
     ) -> Option<Box<ListNode>> {
-        to_reverse_digits(from_reverse_digits(l1) + from_reverse_digits(l2))
+        let mut carry = 0;
+        let mut ds = align_with(
+            |l, r| {
+                let l = l.unwrap_or(0);
+                let r = r.unwrap_or(0);
+                let sum = l + r + carry;
+                carry = sum / 10;
+                sum % 10
+            },
+            l1.expect("lhs must be non-empty!"),
+            l2.expect("rhs must be non-empty!"),
+        );
+        if carry > 0 {
+            push(&mut ds, 1)
+        }
+        Some(ds)
     }
 }
 
