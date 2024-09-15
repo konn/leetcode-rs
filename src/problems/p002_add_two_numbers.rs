@@ -38,11 +38,11 @@ fn fold_right<A>(step: fn(i32, A) -> A, init: A, list: Option<Box<ListNode>>) ->
     }
 }
 
-fn from_reverse_digits(rev_digs: Option<Box<ListNode>>) -> i32 {
-    fold_right(|i, accum| accum * 10 + i, 0, rev_digs)
+fn from_reverse_digits(rev_digs: Option<Box<ListNode>>) -> i64 {
+    fold_right(|i, accum| accum * 10 + (i as i64), 0, rev_digs)
 }
 
-fn to_reverse_digits(i: i32) -> Option<Box<ListNode>> {
+fn to_reverse_digits(i: i64) -> Option<Box<ListNode>> {
     if i == 0 {
         Some(Box::new(ListNode::new(0)))
     } else {
@@ -51,7 +51,7 @@ fn to_reverse_digits(i: i32) -> Option<Box<ListNode>> {
                 if i == 0 {
                     None
                 } else {
-                    Some((i % 10, i / 10))
+                    Some(((i % 10) as i32, i / 10))
                 }
             },
             i,
@@ -108,6 +108,13 @@ mod tests {
                 to_reverse_digits(23)
             )),
             35
+        );
+        assert_eq!(
+            from_reverse_digits(Solution::add_two_numbers(
+                to_reverse_digits(9),
+                to_reverse_digits(9999999991)
+            )),
+            10000000000
         );
 
         assert_eq!(from_reverse_digits(to_reverse_digits(342)), 342);
