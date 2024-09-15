@@ -28,7 +28,7 @@ mod tests {
 
     #[test]
     fn test_length_of_longest_substring() {
-        for (input, output) in vec![("abcabcbb", 3), ("bbbbb", 1), ("pwwkew", 3)] {
+        for (input, output) in vec![("abcabcbb", 3), ("bbbbb", 1), ("pwwkew", 3), ("abba", 2)] {
             assert_eq!(
                 Solution::length_of_longest_substring(input.to_string()),
                 output

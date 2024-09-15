@@ -54,5 +54,9 @@ mod tests {
             Solution::find_median_sorted_arrays(vec![1, 2], vec![3, 4]),
             2.5
         );
+        assert_eq!(
+            Solution::find_median_sorted_arrays(vec![1, 2], vec![-1, 3]),
+            1.5
+        );
     }
 }
