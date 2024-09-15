@@ -1,0 +1,25 @@
+{
+  "problem module": {
+    "prefix": "prob",
+    "body": [
+      "use crate::solution::Solution;"
+    , ""
+    , "// Body starts here"
+    , ""
+    , "impl Solution {"
+    , "    pub fn ${1:problem}(${2:args}) -> ${3:ret} {"
+    , "        $0"
+    , "        unimplemented!()"
+    , "    }"
+    , "}"
+    , ""
+    , "#[cfg(test)]"
+    , "mod tests {"
+    , "    use super::*;"
+    , ""
+    , "    #[test]"
+    , "    fn test_${1}() {}"
+    , "}"
+    ]
+  }
+}
