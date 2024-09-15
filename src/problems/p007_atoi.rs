@@ -5,50 +5,36 @@ use crate::solution::Solution;
 impl Solution {
     pub fn my_atoi(s: String) -> i32 {
         let mut iter = s.chars().skip_while(|v| v.is_whitespace()).peekable();
-        let sign: i64 = match iter.peek() {
+        let (sign, bound) = match iter.peek() {
             Some('+') => {
                 iter.next();
-                1
+                (1 as i32, i32::MAX / 10)
             }
             Some('-') => {
                 iter.next();
-                -1
+                (-1 as i32, (i32::MIN / 10).abs())
             }
-            _ => 1,
+            _ => (1, i32::MAX),
         };
-        let mut digits = iter
+        let parsed = iter
             .skip_while(|v| *v == '0')
             .map_while(|c| c.to_digit(10))
-            // Without next two lines, !!! will match even if there are non-digit character other then digit!
-            .collect::<Vec<_>>()
-            .into_iter();
-        // If there are more than 10 digits, it clearly exceeds the 32-bit integer.
-        // So we only need to parse only first ten digits and return bounds if there are remaining digits.
-        let parsed = digits
-            .by_ref()
             .take(10)
-            .fold(0, |acc, i| acc * 10 + i as i64);
+            .try_fold(0, |acc, i| {
+                let i = i as i32;
+                if acc > bound - i {
+                    None
+                } else {
+                    Some(acc * 10 + i)
+                }
+            });
 
-        if let Some(_) = digits.next() {
-            // !!! Should parse there are more consecutive digits.
-            if sign == 1 {
-                return i32::MAX;
-            } else {
-                return i32::MIN;
-            }
-        }
-
-        // Even if it has <=10 digits, it can still exceed the bounds.
-        // so we must check the bound.
-        let ub = i32::MAX as i64;
-        let lb = i32::MIN as i64;
-        let value = sign * parsed;
-        if value < lb {
-            i32::MIN
-        } else if value > ub {
-            i32::MAX
+        if let Some(d) = parsed {
+            sign * d
+        } else if sign == 1 {
+            return i32::MAX;
         } else {
-            value as i32
+            return i32::MIN;
         }
     }
 }
