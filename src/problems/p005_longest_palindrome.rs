@@ -16,7 +16,6 @@ impl Solution {
             .chain(iter::once('#'))
             .collect::<Vec<_>>();
 
-        dbg!(&s);
         // start_poss[i] records all the start positions of the palindrom ending at [i].
         // invariant: start_poss[i] is strictly decreasing.
         let mut start_poss = (0..s.len()).map(|v| vec![v]).collect::<Vec<_>>();
