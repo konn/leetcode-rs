@@ -19,7 +19,7 @@ impl Solution {
         let parsed = iter
             .skip_while(|v| *v == '0')
             .map_while(|c| c.to_digit(10))
-            .take(10)
+            .take(11) // i32::MAX is 2147483647, so we only need first 11 digits
             .try_fold(0, |acc, i| {
                 let i = i as i32;
                 if acc > bound - i {
