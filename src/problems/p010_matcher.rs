@@ -50,7 +50,7 @@ impl Pat {
         }
     }
 
-    pub fn matches_empty(self) -> bool {
+    pub fn matches_empty(&self) -> bool {
         match self {
             Pat::Fail => false,
             Pat::Empty => true,
@@ -98,7 +98,7 @@ impl Pat {
     pub fn derive(self, c: char) -> Self {
         match self {
             Pat::Seq(l, r) => {
-                if l.clone().matches_empty() {
+                if l.matches_empty() {
                     let dl_r = Pat::seq(l.derive(c), *r.clone());
                     let dr = r.derive(c);
                     Pat::alt(dl_r, dr)
