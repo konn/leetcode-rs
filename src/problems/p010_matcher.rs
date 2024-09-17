@@ -1,3 +1,5 @@
+use std::{borrow::Borrow, rc::Rc};
+
 use crate::solution::Solution;
 
 // Body starts here
@@ -8,10 +10,10 @@ enum Atom {
 }
 
 impl Atom {
-    pub fn derive(self, c: char) -> Pat {
+    pub fn derive(&self, c: char) -> Pat {
         match self {
             Atom::Char(d) => {
-                if c == d {
+                if c == *d {
                     Pat::Empty
                 } else {
                     Pat::Fail
@@ -28,25 +30,25 @@ enum Pat {
     Empty,
     Atom(Atom),
     Repeat(Atom),
-    Alt(Box<Pat>, Box<Pat>),
-    Seq(Box<Pat>, Box<Pat>),
+    Alt(Rc<Pat>, Rc<Pat>),
+    Seq(Rc<Pat>, Rc<Pat>),
 }
 
 impl Pat {
-    pub fn alt(l: Pat, r: Pat) -> Self {
-        match (l, r) {
-            (Pat::Fail, r) => r,
-            (l, Pat::Fail) => l,
-            (l, r) => Pat::Alt(Box::new(l), Box::new(r)),
+    pub fn alt(l: Rc<Pat>, r: Rc<Pat>) -> Rc<Self> {
+        match (l.borrow(), r.borrow()) {
+            (Pat::Fail, _) => r,
+            (_, Pat::Fail) => l,
+            _ => Rc::new(Pat::Alt(l, r)),
         }
     }
 
-    pub fn seq(l: Pat, r: Pat) -> Pat {
-        match (l, r) {
-            (Pat::Fail, _) | (_, Pat::Fail) => Pat::Fail,
-            (Pat::Empty, r) => r,
-            (l, Pat::Empty) => l,
-            (l, r) => Pat::Seq(Box::new(l), Box::new(r)),
+    pub fn seq(l: Rc<Pat>, r: Rc<Pat>) -> Rc<Pat> {
+        match (l.borrow(), r.borrow()) {
+            (Pat::Fail, _) | (_, Pat::Fail) => Rc::new(Pat::Fail),
+            (Pat::Empty, _) => r,
+            (_, Pat::Empty) => l,
+            _ => Rc::new(Pat::Seq(l, r)),
         }
     }
 
@@ -63,57 +65,73 @@ impl Pat {
 
     pub fn parse(s: String) -> Self {
         let mut prev: Option<Atom> = None;
-        let mut pat = Pat::Empty;
+        let mut pat = None;
         for c in s.chars() {
-            match c {
-                '*' => {
-                    pat = Self::seq(
-                        pat,
-                        Pat::Repeat(prev.take().expect("* not followed by atom!")),
-                    );
-                }
+            let p = match c {
+                '*' => Some(Pat::Repeat(prev.take().expect("* not followed by atom!"))),
                 _ => {
                     let atom = match c {
                         '.' => Atom::Wild,
                         _ => Atom::Char(c),
                     };
                     if let Some(e) = prev.replace(atom) {
-                        pat = Pat::seq(pat, Pat::Atom(e))
+                        Some(Pat::Atom(e))
+                    } else {
+                        None
                     }
+                }
+            };
+            if let Some(p) = p {
+                pat = match pat {
+                    Some(p0) => Some(Pat::Seq(Rc::new(p0), Rc::new(p))),
+                    None => Some(p),
                 }
             }
         }
         if let Some(e) = prev {
-            pat = Pat::seq(pat, Pat::Atom(e))
+            let p = Pat::Atom(e);
+            pat = match pat {
+                Some(p0) => Some(Pat::Seq(Rc::new(p0), Rc::new(p))),
+                None => Some(p),
+            }
         }
-        pat
+        pat.unwrap_or(Pat::Empty)
     }
 
-    pub fn matches(self, s: String) -> bool {
-        let pat = s.chars().fold(self, Self::derive);
+    pub fn matches(&self, s: &str) -> bool {
+        let mut pat_raw;
+        let mut pat = self;
+        for c in s.chars() {
+            pat_raw = pat.derive(c);
+            pat = &pat_raw;
+        }
         pat.matches_empty()
     }
 
     // Brzozowski derivative
-    pub fn derive(self, c: char) -> Self {
+    pub fn derive(&self, c: char) -> Rc<Self> {
         match self {
             Pat::Seq(l, r) => {
                 if l.matches_empty() {
-                    let dl_r = Pat::seq(l.derive(c), *r.clone());
+                    let dl_r = Pat::seq(l.derive(c), r.clone());
                     let dr = r.derive(c);
-                    Pat::alt(dl_r, dr)
+                    if let Pat::Fail = dr.borrow() {
+                        dl_r
+                    } else {
+                        Pat::alt(dl_r, dr)
+                    }
                 } else {
-                    Pat::seq(l.derive(c), *r)
+                    Pat::seq(l.derive(c), r.clone())
                 }
             }
-            Pat::Fail => Pat::Fail,
-            Pat::Empty => Pat::Fail,
+            Pat::Fail => Rc::new(Pat::Fail),
+            Pat::Empty => Rc::new(Pat::Fail),
             Pat::Alt(l, r) => Pat::alt(l.derive(c), r.derive(c)),
-            Pat::Atom(a) => a.derive(c),
+            Pat::Atom(a) => Rc::new(a.derive(c)),
             Pat::Repeat(a) => {
                 let b = a.clone();
-                let da = a.clone().derive(c);
-                Pat::seq(da, Pat::Repeat(b))
+                let da = a.derive(c);
+                Pat::seq(Rc::new(da), Rc::new(Pat::Repeat(b)))
             }
         }
     }
@@ -121,7 +139,7 @@ impl Pat {
 
 impl Solution {
     pub fn is_match(s: String, p: String) -> bool {
-        Pat::parse(p).matches(s)
+        Pat::parse(p).matches(&s)
     }
 }
 
