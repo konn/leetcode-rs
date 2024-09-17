@@ -64,38 +64,39 @@ impl Pat {
     }
 
     pub fn parse(s: String) -> Self {
-        let mut prev: Option<Atom> = None;
-        let mut pat = None;
-        for c in s.chars() {
-            let p = match c {
-                '*' => Some(Pat::Repeat(prev.take().expect("* not followed by atom!"))),
-                _ => {
-                    let atom = match c {
+        // We build a pattern in right-associative form,
+        // which would give a better performance for Brzozowski derivative.
+        // To do this, we reverse the string and build the pattern from right to left.
+        let mut is_rep = false;
+        s.chars()
+            .rev()
+            .flat_map(|c| match c {
+                '*' => {
+                    is_rep = true;
+                    None
+                }
+                c => {
+                    let p = match c {
                         '.' => Atom::Wild,
                         _ => Atom::Char(c),
                     };
-                    if let Some(e) = prev.replace(atom) {
-                        Some(Pat::Atom(e))
+                    if is_rep {
+                        is_rep = false;
+                        Some(Pat::Repeat(p))
                     } else {
-                        None
+                        Some(Pat::Atom(p))
                     }
                 }
-            };
-            if let Some(p) = p {
-                pat = match pat {
-                    Some(p0) => Some(Pat::Seq(Rc::new(p0), Rc::new(p))),
-                    None => Some(p),
+            })
+            .fold(Pat::Empty, |acc, pat| {
+                if let Pat::Empty = acc {
+                    pat
+                } else if let Pat::Empty = pat {
+                    acc
+                } else {
+                    Pat::Seq(Rc::new(pat), Rc::new(acc))
                 }
-            }
-        }
-        if let Some(e) = prev {
-            let p = Pat::Atom(e);
-            pat = match pat {
-                Some(p0) => Some(Pat::Seq(Rc::new(p0), Rc::new(p))),
-                None => Some(p),
-            }
-        }
-        pat.unwrap_or(Pat::Empty)
+            })
     }
 
     pub fn matches(&self, s: &str) -> bool {
