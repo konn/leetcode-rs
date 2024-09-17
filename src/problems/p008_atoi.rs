@@ -2,18 +2,6 @@ use crate::solution::Solution;
 
 // Body starts here
 
-enum Sign {
-    Neg,
-    Pos,
-}
-
-fn with_sign(sign: Sign, i: i64) -> i64 {
-    match sign {
-        Sign::Neg => -(i as i64),
-        Sign::Pos => i as i64,
-    }
-}
-
 impl Solution {
     pub fn my_atoi(s: String) -> i32 {
         let mut iter = s.chars().skip_while(|v| v.is_whitespace()).peekable();
